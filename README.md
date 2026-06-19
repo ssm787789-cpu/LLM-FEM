@@ -1,38 +1,52 @@
-# LLM-FEM — OptumGX Scripting Wiki
+# LLM-FEM — An LLM-Wiki for OptumGX Scripting
 
-A persistent, compounding knowledge base for scripting **OptumGX** (a geotechnical FEM
-program with a Python/gRPC API), built with the **LLM-Wiki pattern** by
+A persistent, interlinked knowledge base for scripting **OptumGX**, built with the
+**LLM-Wiki pattern** by
 [Andrej Karpathy](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
 
-## What this is
+## What is OptumGX?
 
-OptumGX exposes a large Python API — an object hierarchy (`GX → Project → Model → Stage`),
-~27 material models, dozens of load/boundary-condition features, and a dense result model
-— spread across ~90 library files plus two coexisting API generations (V1 and V2). Every
-time you write a script you would otherwise re-derive the same facts from source code and
-manuals.
+[OptumGX](https://optumce.com/) is a geotechnical **Finite Element Method (FEM)** software
+by Optum CE, used for geotechnical analyses such as **slope stability, bearing capacity,
+consolidation, seepage, and excavation**. Beyond its GUI, OptumGX ships a **Python / gRPC
+API** that lets you build models, assign materials, apply loads and boundary conditions,
+run analyses, and extract results entirely from scripts — ideal for automation and
+parametric studies.
 
-This repository turns that one-time reading effort into a **durable, interlinked wiki**:
+## What is this repository?
+
+The OptumGX Python API is large: an object hierarchy (`GX → Project → Model → Stage`),
+~27 material models, dozens of load and boundary-condition features, and a dense result
+model — spread across many source files, with two coexisting API generations (V1 and V2).
+Writing a script usually means re-deriving the same facts from source code and manuals.
+
+**LLM-FEM** turns that one-time reading effort into a **durable, compounding wiki**:
 LLM-generated Markdown pages that explain *how to code each thing*, cross-reference each
-other, and already have the contradictions and gotchas flagged. The wiki gets richer with
-every source ingested and every question answered — it **compounds** instead of evaporating
-into chat history.
+other, and already have the contradictions and gotchas flagged. Instead of reverse-
+engineering the API again, you **query the wiki** and get answers grounded in the actual
+shipped code, with working snippets labeled `VERBATIM` (copied from source) or `INFERRED`
+(reconstructed from the API surface).
 
-**Problem it solves:** no more digging through manuals or decompiled API files every time
-you script an analysis. Ask a question, get an answer grounded in the actual shipped code,
-with working snippets labeled `VERBATIM` or `INFERRED`.
+The wiki gets richer with every source ingested and every question answered — it
+**compounds** instead of evaporating into chat history.
+
+## Who is this for?
+
+Geotechnical engineers and researchers who use OptumGX and want to **automate analyses via
+Python scripting** — running design sweeps, batch analyses, or custom result extraction —
+without repeatedly reverse-engineering the API.
 
 ## Three-layer architecture
 
 ```
-Raw Sources (READ-ONLY)        Wiki (LLM-owned)              Schema (config)
-C:\Users\Public\OPTUM CE\  →   optumgx-wiki/wiki/        ←   optumgx-wiki/CLAUDE.md
-the shipped OptumGX install     interlinked Markdown          rules & workflows that
-(library/OptumGX, plugins)      pages, never deleted          make Claude a disciplined
-immutable source of truth       only by the assistant         wiki maintainer
+Raw Sources (READ-ONLY)                Wiki (LLM-owned)            Schema (config)
+<your OptumGX installation dir>  →     optumgx-wiki/wiki/      ←   optumgx-wiki/CLAUDE.md
+the shipped OptumGX install            interlinked Markdown        rules & workflows that
+(its Python library + plugins)         pages, never deleted        make the agent a
+immutable source of truth              only by the assistant       disciplined maintainer
 ```
 
-1. **Raw Sources** — the immutable OptumGX installation. Read, never modified.
+1. **Raw Sources** — your immutable OptumGX installation. Read, never modified.
 2. **The Wiki** — LLM-generated, interlinked pages with YAML frontmatter and
    `[[wikilinks]]`. The assistant owns this layer.
 3. **The Schema** (`CLAUDE.md`) — defines page format, tag taxonomy, ingest/query/lint
@@ -56,27 +70,50 @@ optumgx-wiki/
 ```
 
 Every page carries frontmatter (`title`, `category`, `source`, `tags`, `source_count`,
-`relates_to`) and links to siblings with `[[wikilinks]]` — so it is also a navigable
-**Obsidian** vault (open `optumgx-wiki/` as a vault; graph hubs = most important classes).
+`relates_to`) and links to siblings with `[[wikilinks]]` — so the repository also works as
+a navigable **Obsidian** vault (graph hubs = the most important API classes).
+
+## Prerequisites
+
+- **OptumGX installed**, with the Python API available (the GUI acts as the local API
+  server).
+- **[Claude Code](https://claude.ai/code)** — or any LLM agent that can read and write
+  files — to query, ingest, and maintain the wiki.
+- **[Obsidian](https://obsidian.md/)** *(optional)* — to browse the wiki as an interlinked
+  graph.
+
+## Getting started
+
+1. **Clone this repository**
+   ```bash
+   git clone https://github.com/ssm787789-cpu/LLM-FEM.git
+   cd LLM-FEM
+   ```
+2. **Point the schema at your OptumGX install.** Edit `CLAUDE.md` and replace the raw
+   source path (the source-of-truth map) with *your* local OptumGX installation directory.
+3. **Open Claude Code in this directory** (or your preferred LLM agent).
+4. **Ingest the API sources.** Ask the agent to ingest the OptumGX Python library,
+   following the ingest workflow in `CLAUDE.md` (read fully → write/update pages → update
+   `index.md` → append to `log.md` → commit).
+5. **Start querying**, e.g.:
+   > "How do I run a factor-of-safety analysis and read the FOS?"
+   > "How do I create a Mohr-Coulomb soil and assign it to a face?"
+   > "How do I give Young's modulus a depth gradient?"
 
 ## How to use it with Claude Code
 
-The wiki is designed to be *used and extended* by Claude Code in this directory.
+**Claude Code** is an agentic coding assistant by Anthropic that can read, write, and
+maintain files autonomously. The wiki is designed to be used and extended by it (or a
+similar agent) in this directory.
 
-- **Ask a scripting question.** Claude reads `index.md` first, opens the relevant pages,
+- **Ask a scripting question.** The agent reads `index.md` first, opens the relevant pages,
   and answers with `[[citations]]` and labeled code. Good answers get filed back as new
   pages, so the wiki improves as you use it.
-  > "How do I run a factor-of-safety analysis and read the FOS?"
-  > "How do I give Young's modulus a depth gradient?"
-
-- **Ingest a new source.** Point Claude at a new file under the raw sources and ask it to
-  ingest it. It follows the ingest workflow in `CLAUDE.md`: read fully → write/update pages
-  → update `index.md` → append to `log.md` → commit `ingest: <filename>`.
-
-- **Lint periodically.** Ask Claude to run the lint checklist in `CLAUDE.md` to find
+- **Ingest a new source.** Point the agent at a new file under your raw sources and ask it
+  to ingest it, following the workflow in `CLAUDE.md` and committing `ingest: <filename>`.
+- **Lint periodically.** Ask the agent to run the lint checklist in `CLAUDE.md` to find
   contradictions, orphan pages, stale claims, and missing cross-references.
-
-- **Browse manually.** Open the repo as an Obsidian vault, or just start at
+- **Browse manually.** Open the repo as an Obsidian vault, or start at
   [`overview.md`](overview.md) and [`index.md`](index.md).
 
 See [`CLAUDE.md`](CLAUDE.md) for the full rules, page format, and workflows.
